@@ -1,5 +1,8 @@
 package com.example.quiz.adapters;
 
+import android.annotation.SuppressLint;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,8 +19,8 @@ public class QuestionAdapter extends RecyclerView.Adapter<QuestionAdapter.Questi
     private List<QuestionItem> questions = new ArrayList<>();
 
     public static class QuestionItem {
-        public String questionText;
-        public String[] options = new String[4];
+        public String questionText = "";
+        public String[] options = new String[]{"", "", "", ""};
         public int correctAnswerIndex = 0;
     }
 
@@ -30,8 +33,10 @@ public class QuestionAdapter extends RecyclerView.Adapter<QuestionAdapter.Questi
     }
 
     @Override
-    public void onBindViewHolder(@NonNull QuestionViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull QuestionViewHolder holder, @SuppressLint("RecyclerView") int position) {
         QuestionItem item = questions.get(position);
+
+        // Set current values
         holder.questionEditText.setText(item.questionText);
         holder.option1EditText.setText(item.options[0]);
         holder.option2EditText.setText(item.options[1]);
@@ -39,11 +44,48 @@ public class QuestionAdapter extends RecyclerView.Adapter<QuestionAdapter.Questi
         holder.option4EditText.setText(item.options[3]);
         holder.correctAnswerRadioGroup.check(getRadioIdForIndex(item.correctAnswerIndex));
 
-        // TODO: Set listeners to update data
-//        holder.questionEditText.addTextChangedListener(/*...*/);
-        // Add similar text changed listeners for options
+        // Add text watchers
+        holder.questionEditText.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                questions.get(position).questionText = s.toString();
+            }
+        });
+
+        // Add similar text watchers for all option EditTexts
+        holder.option1EditText.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                questions.get(position).options[0] = s.toString();
+            }
+        });
+        holder.option2EditText.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                questions.get(position).options[1] = s.toString();
+            }
+        });
+        holder.option3EditText.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                questions.get(position).options[2] = s.toString();
+            }
+        });
+        holder.option4EditText.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                questions.get(position).options[3] = s.toString();
+            }
+        });
+
+        // Radio group listener
         holder.correctAnswerRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            item.correctAnswerIndex = getIndexForRadioId(checkedId);
+            questions.get(position).correctAnswerIndex = getIndexForRadioId(checkedId);
         });
     }
 
@@ -78,6 +120,7 @@ public class QuestionAdapter extends RecyclerView.Adapter<QuestionAdapter.Questi
         if (id == R.id.option4Radio) return 3;
         return 0;
     }
+
 
     static class QuestionViewHolder extends RecyclerView.ViewHolder {
         EditText questionEditText;
