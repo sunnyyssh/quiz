@@ -1,77 +1,80 @@
 package com.example.quiz;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
 
-import com.google.android.material.snackbar.Snackbar;
-
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
-import android.view.View;
+import com.example.quiz.models.QuizResponse;
+import com.example.quiz.network.QuizApiService;
+import com.example.quiz.network.RetrofitClient;
 
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.example.quiz.databinding.ActivityMainBinding;
-
-import android.view.Menu;
-import android.view.MenuItem;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
-
-    private AppBarConfiguration appBarConfiguration;
-    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        EditText quizIdEditText = findViewById(R.id.quizIdEditText);
 
-        setSupportActionBar(binding.toolbar);
+        // Initialize buttons
+        Button startQuizButton = findViewById(R.id.startQuizButton);
+        Button createQuizButton = findViewById(R.id.createQuizButton);
 
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        appBarConfiguration = new AppBarConfiguration.Builder(navController.getGraph()).build();
-        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        // Create Quiz Button Click
+        createQuizButton.setOnClickListener(v -> {
+            // Navigate to CreateQuizActivity
+            Intent intent = new Intent(MainActivity.this, CreateQuizActivity.class);
+            startActivity(intent);
+        });
 
-        binding.fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAnchorView(R.id.fab)
-                        .setAction("Action", null).show();
+        // Start Quiz Button Click (placeholder)
+        startQuizButton.setOnClickListener(v -> {
+            String quizId = quizIdEditText.getText().toString();
+            if (!quizId.isEmpty()) {
+                // Call API to get quiz
+                QuizApiService apiService = RetrofitClient.getApiService();
+
+                apiService.getQuiz(Long.parseLong(quizId)).enqueue(new Callback<QuizResponse>() {
+                    @Override
+                    public void onResponse(Call<QuizResponse> call, Response<QuizResponse> response) {
+                        if (response.isSuccessful()) {
+                            Intent intent = new Intent(MainActivity.this, QuestionActivity.class);
+                            intent.putExtra("quiz", response.body());
+                            startActivity(intent);
+                        } else if (response.code() == 404) {
+                            showErrorDialog("Quiz not found with ID: " + quizId);
+                        } else {
+                            showErrorDialog("Error loading quiz: " + response.message());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<QuizResponse> call, Throwable t) {
+                        showErrorDialog("Error loading quiz (network error)");
+                    }
+                });
             }
         });
+
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
-        return NavigationUI.navigateUp(navController, appBarConfiguration)
-                || super.onSupportNavigateUp();
+    private void showErrorDialog(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("Error")
+                .setMessage(message)
+                .setPositiveButton("OK", null)
+                .show();
     }
 }
