@@ -15,6 +15,7 @@ type Question struct {
 
 type Quiz struct {
 	ID        int64      `json:"-"`
+	Title     string     `json:"title"`
 	Questions []Question `json:"questions"`
 }
 
