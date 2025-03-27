@@ -11,6 +11,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.quiz.controller.QuizController;
 import com.example.quiz.models.QuizResponse;
 import com.example.quiz.network.QuizApiService;
 import com.example.quiz.network.RetrofitClient;
@@ -42,30 +43,30 @@ public class MainActivity extends AppCompatActivity {
         // Start Quiz Button Click (placeholder)
         startQuizButton.setOnClickListener(v -> {
             String quizId = quizIdEditText.getText().toString();
-            if (!quizId.isEmpty()) {
-                // Call API to get quiz
-                QuizApiService apiService = RetrofitClient.getApiService();
 
-                apiService.getQuiz(Long.parseLong(quizId)).enqueue(new Callback<QuizResponse>() {
-                    @Override
-                    public void onResponse(Call<QuizResponse> call, Response<QuizResponse> response) {
-                        if (response.isSuccessful()) {
-                            Intent intent = new Intent(MainActivity.this, QuestionActivity.class);
-                            intent.putExtra("quiz", response.body());
-                            startActivity(intent);
-                        } else if (response.code() == 404) {
-                            showErrorDialog("Quiz not found with ID: " + quizId);
-                        } else {
-                            showErrorDialog("Error loading quiz: " + response.message());
-                        }
-                    }
+            showLoadingDialog("Loading quiz...");
 
-                    @Override
-                    public void onFailure(Call<QuizResponse> call, Throwable t) {
-                        showErrorDialog("Error loading quiz (network error)");
+            QuizController.getInstance().fetchQuiz(Long.parseLong(quizId), new QuizController.QuizCallback() {
+                @Override
+                public void onQuizLoaded(QuizResponse quiz) {
+                    dismissLoadingDialog();
+                    Intent intent = new Intent(MainActivity.this, QuestionActivity.class);
+                    intent.putExtra("quiz", quiz);
+
+                    QuizController.getInstance().startNewQuiz(quiz, Long.parseLong(quizId));
+                    startActivity(intent);
+                }
+
+                @Override
+                public void onError(int code, String message) {
+                    dismissLoadingDialog();
+                    if (code == 404) {
+                        showErrorDialog("Quiz not found with ID: " + quizId);
+                    } else {
+                        showErrorDialog("Error: " + message);
                     }
-                });
-            }
+                }
+            });
         });
 
     }
@@ -76,5 +77,20 @@ public class MainActivity extends AppCompatActivity {
                 .setMessage(message)
                 .setPositiveButton("OK", null)
                 .show();
+    }
+
+    private android.app.ProgressDialog progressDialog;
+
+    private void showLoadingDialog(String message) {
+        progressDialog = new android.app.ProgressDialog(this);
+        progressDialog.setMessage(message);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+    }
+
+    private void dismissLoadingDialog() {
+        if (progressDialog != null && progressDialog.isShowing()) {
+            progressDialog.dismiss();
+        }
     }
 }

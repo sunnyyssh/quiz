@@ -1,12 +1,17 @@
 package com.example.quiz;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.quiz.controller.QuizController;
 import com.example.quiz.models.QuizResponse;
 import com.example.quiz.models.QuestionResponse;
 
@@ -53,21 +58,23 @@ public class QuestionActivity extends AppCompatActivity {
         nextButton.setOnClickListener(v -> {
             int selectedId = optionsRadioGroup.getCheckedRadioButtonId();
             if (selectedId != -1) {
-                selectedAnswers.set(currentQuestionIndex, optionsRadioGroup.indexOfChild(findViewById(selectedId)));
+                int selectedIndex = optionsRadioGroup.indexOfChild(findViewById(selectedId));
+                QuizController.getInstance().saveAnswer(selectedIndex);
 
-                if (currentQuestionIndex < quiz.getQuestions().size() - 1) {
-                    currentQuestionIndex++;
-                    showQuestion(currentQuestionIndex);
+                if (QuizController.getInstance().getCurrentQuestionIndex() <
+                        QuizController.getInstance().getQuestionCount() - 1) {
+                    QuizController.getInstance().moveToNextQuestion();
+                    showQuestion(QuizController.getInstance().getCurrentQuestionIndex());
                 } else {
-                    // All questions answered - show results
-                    showResults();
+                    // Fetch answers and show results
+                    fetchAnswersAndShowResults();
                 }
             }
         });
     }
 
     private void showQuestion(int index) {
-        QuestionResponse question = quiz.getQuestions().get(index);
+        QuestionResponse question = QuizController.getInstance().getCurrentQuestion();
 
         // Update progress
         progressText.setText(String.format("Question %d/%d", index + 1, quiz.getQuestions().size()));
@@ -99,7 +106,29 @@ public class QuestionActivity extends AppCompatActivity {
         nextButton.setText(index == quiz.getQuestions().size() - 1 ? "Finish" : "Next");
     }
 
-    private void showResults() {
+    private void fetchAnswersAndShowResults() {
+        QuizController.getInstance().fetchAnswers(QuizController.getInstance().getQuizId(), new QuizController.AnswersCallback() {
+            @Override
+            public void onAnswersLoaded(List<String> answers) {
+                int score = QuizController.getInstance().calculateScore(answers);
+                int totalQuestions = QuizController.getInstance().getQuestionCount();
+
+                Intent intent = new Intent(QuestionActivity.this, ResultsActivity.class);
+                intent.putExtra("score", score);
+                intent.putExtra("totalQuestions", totalQuestions);
+                intent.putStringArrayListExtra("correctAnswers", new ArrayList<>(answers));
+                startActivity(intent);
+                finish();
+            }
+
+            @Override
+            public void onError(int code, String message) {
+                Toast.makeText(QuestionActivity.this, message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+    private void showResults(int score, List<String> answers) {
         // Calculate score and show results screen
         // We'll implement this in the next step
     }

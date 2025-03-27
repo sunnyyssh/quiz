@@ -37,7 +37,7 @@ func main() {
 
 	r.GET("/quiz/:id", getQuiz(repo))
 	r.POST("/quiz", createQuiz(repo))
-	r.PUT("/quiz/:id/answers", getQuizAnswers(repo))
+	r.GET("/quiz/:id/answers", getQuizAnswers(repo))
 
 	if err := r.Run(":8088"); err != nil {
 		log.Fatalf("gin running failed: %s", err)
