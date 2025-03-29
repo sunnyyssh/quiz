@@ -57,6 +57,7 @@
 
     <!-- Back to Main Button -->
     <Button
+        style="@style/AwesomeButton.Primary"
         android:id="@+id/backToMainButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -6,13 +6,18 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Quiz Title -->
-    <EditText
-        android:id="@+id/quizTitleEditText"
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/AwesomeEditText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter Quiz Title"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="16dp"
+        android:hint="Quiz Title">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/quizTitleEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </com.google.android.material.textfield.TextInputLayout>
 
     <!-- Questions List -->
     <androidx.recyclerview.widget.RecyclerView
@@ -24,6 +29,7 @@
 
     <!-- Add Question Button -->
     <Button
+        style="@style/AwesomeButton.Primary"
         android:id="@+id/addQuestionButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -38,12 +44,14 @@
         android:gravity="end">
 
         <Button
+            style="@style/AwesomeButton.Secondary"
             android:id="@+id/cancelButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Cancel"/>
 
         <Button
+            style="@style/AwesomeButton.Primary"
             android:id="@+id/createQuizButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
